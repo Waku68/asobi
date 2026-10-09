@@ -16,11 +16,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* layout: a drum-machine faceplate — transport on top, a horizontally scrolling 16-step grid, then voice + sound controls.
+/* layout: a drum-machine faceplate — transport on top, a horizontally scrolling 16-step grid, then voice, sounds and export.
    One deliberate dark look (a hardware box), so no light theme. */
 :root{
   --bg:#16151c; --plate:#201f29; --plate2:#2a2935; --ink:#f1eee6; --muted:#a29fb0; --line:#3a3848;
-  --kick:#ff7a3d; --snare:#4fd1e8; --hat:#ffd23f; --clap:#ff6fae; --voice:#a6e36b; --mel:#b49cff;
+  --voice:#a6e36b; --mel:#b49cff; --hot:#ff7a3d;
   --f-display:"Dela Gothic One","Hiragino Sans",system-ui,sans-serif;
   --f-body:"Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
   --f-num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
@@ -33,42 +33,51 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);fo
 [hidden]{display:none!important}
 button,select,input{font:inherit;color:inherit}
 button{cursor:pointer;touch-action:manipulation}
-button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--hat);outline-offset:2px}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #ffd23f;outline-offset:2px}
 .wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:12px 40px;display:grid;gap:14px}
 header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
 h1{font-family:var(--f-display);font-weight:400;font-size:26px;margin:0;letter-spacing:.04em}
 h1 span{color:var(--voice)}
 .sub{font-size:12px;color:var(--muted)}
-.plate{background:var(--plate);border:1px solid var(--line);border-radius:16px;padding:12px;display:grid;gap:12px}
+.plate{background:var(--plate);border:1px solid var(--line);border-radius:16px;padding:12px;display:grid;gap:12px;min-width:0}
 .transport{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
 .play{width:68px;height:68px;border-radius:50%;border:0;background:var(--voice);color:#14200a;font-family:var(--f-display);font-size:15px;box-shadow:0 4px 0 #5d8a31}
 .play:active{transform:translateY(4px);box-shadow:none}
-.play.on{background:var(--kick);color:#2a0f00;box-shadow:0 4px 0 #a2451a}
+.play.on{background:var(--hot);color:#2a0f00;box-shadow:0 4px 0 #a2451a}
 .dials{display:grid;gap:8px;min-width:0}
 .dial{display:grid;grid-template-columns:3.6em 1fr 3.4em;gap:8px;align-items:center}
 .dial label{font-size:13px;color:var(--muted)}
 .dial output{font-family:var(--f-num);font-size:13px;text-align:right}
 input[type=range]{width:100%;accent-color:var(--voice)}
+.modes{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.modes .cap{font-size:12px;color:var(--muted);margin-right:2px}
+.chip{border:1px solid var(--line);background:var(--plate2);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .gridbox{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
-.grid{display:grid;grid-template-columns:52px repeat(16,var(--cell));gap:4px;width:max-content}
-.lab{position:sticky;left:0;z-index:1;background:var(--plate);display:flex;align-items:center;font-size:12px;color:var(--muted);padding-right:6px;height:var(--cell);white-space:nowrap}
-.lab b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;flex:none}
-.c{width:var(--cell);height:var(--cell);border-radius:6px;border:0;background:var(--plate2);padding:0}
+.grid{display:grid;grid-template-columns:100px repeat(16,var(--cell));gap:4px;width:max-content}
+.lab{position:sticky;left:0;z-index:1;background:var(--plate);display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);padding-right:4px;height:var(--cell);white-space:nowrap;min-width:0}
+.lab .sw{width:8px;height:8px;border-radius:2px;flex:none}
+.lab .nm{border:0;background:transparent;padding:0;color:inherit;font-size:12px;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:left}
+.lab .x{border:0;background:transparent;color:#6f6c80;width:20px;height:24px;padding:0;font-size:14px;flex:none}
+.c{position:relative;width:var(--cell);height:var(--cell);border-radius:6px;border:0;background:var(--plate2);padding:0;font-family:var(--f-num);font-size:12px;font-weight:700;color:#14131a}
 .c.q{box-shadow:inset 0 0 0 1px #4a4860}
 .c.on{background:var(--col)}
+.c.weak{background:color-mix(in srgb,var(--col) 42%,var(--plate2))}
 .c.now{outline:2px solid var(--ink);outline-offset:-2px}
 .c.head{height:8px;background:transparent;border-radius:3px}
 .c.head.now{background:var(--ink);outline:none}
 .sep{grid-column:1/-1;height:2px;background:var(--line);margin:2px 0}
-.row-voice .c.on{background:var(--voice)}
+.addrow{grid-column:1/-1;display:flex;gap:8px;align-items:center;position:sticky;left:0;width:max-content}
 .panel h2{font-family:var(--f-display);font-weight:400;font-size:16px;margin:0}
 .panel{display:grid;gap:10px}
-.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .btn{border:1px solid var(--line);background:var(--plate2);border-radius:10px;padding:8px 12px;font-size:14px;font-weight:700}
+.btn.big{background:var(--voice);color:#14200a;border-color:var(--voice)}
 .btn.rec{background:#5a1d2a;border-color:#8e2f43}
 .btn.rec.live{background:#e5354f;color:#fff}
 .btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-select{border:1px solid var(--line);background:var(--plate2);border-radius:10px;padding:8px}
+.btn:disabled{opacity:.5}
+select{border:1px solid var(--line);background:var(--plate2);border-radius:10px;padding:8px;max-width:100%}
 .hint{font-size:12px;color:var(--muted);margin:0}
 .wave{width:100%;height:44px;background:var(--plate2);border-radius:8px;display:block}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:999px;padding:8px 16px;font-size:14px;max-width:calc(100% - 32px);text-align:center;z-index:5}
@@ -82,7 +91,7 @@ select{border:1px solid var(--line);background:var(--plate2);border-radius:10px;
     <span class="sub">16マスを押して、ずっと繰り返す</span>
   </header>
 
-  <section class="plate" aria-label="再生">
+  <section class="plate" aria-label="再生とステップ">
     <div class="transport">
       <button id="play" class="play" type="button" aria-pressed="false">再生</button>
       <div class="dials">
@@ -90,8 +99,28 @@ select{border:1px solid var(--line);background:var(--plate2);border-radius:10px;
         <div class="dial"><label for="swing">ハネ</label><input id="swing" type="range" min="0" max="60" step="1" value="12"><output id="swingV">12%</output></div>
       </div>
     </div>
+    <div class="modes" role="group" aria-label="タップで入れる音" id="modes">
+      <span class="cap">タップで入れる音</span>
+      <button type="button" class="chip" data-m="1" aria-pressed="true">強</button>
+      <button type="button" class="chip" data-m="2" aria-pressed="false">弱</button>
+      <button type="button" class="chip" data-m="3" aria-pressed="false">×2</button>
+      <button type="button" class="chip" data-m="4" aria-pressed="false">×3</button>
+      <button type="button" class="chip" data-m="5" aria-pressed="false">×4</button>
+    </div>
     <div class="gridbox" role="region" aria-label="ステップ" tabindex="0"><div id="grid" class="grid"></div></div>
-    <p class="hint">横にスクロールできる。4マスで1拍。メロディは縦1列に1音だけ。</p>
+    <p class="hint">横にスクロールできる。4マスで1拍。同じ入れ方でもう一度押すと消える。×2〜×4は1マスの中で連打(ロール)。楽器の名前を押すと音を試せる。</p>
+  </section>
+
+  <section class="plate panel" aria-label="ランダム">
+    <h2>ランダムに作る</h2>
+    <div class="btns">
+      <select id="genre" aria-label="ジャンル">
+        <option value="any">おまかせ</option><option value="hiphop">ヒップホップ</option><option value="lofi">ゆるい</option>
+        <option value="four">四つ打ち</option><option value="trap">トラップ</option>
+      </select>
+      <button id="dice" class="btn big" type="button">サイコロを振る</button>
+    </div>
+    <p class="hint">押すたびに新しいパターンができる。気に入ったら、そこからマスをいじって育てる。</p>
   </section>
 
   <section class="plate panel" aria-label="自分の声">
@@ -103,15 +132,17 @@ select{border:1px solid var(--line);background:var(--plate2);border-radius:10px;
     </div>
     <canvas id="wave" class="wave" width="600" height="88" aria-label="録音した声の波形"></canvas>
     <div class="dial"><label for="vpitch">声の高さ</label><input id="vpitch" type="range" min="-12" max="12" step="1" value="0"><output id="vpitchV">±0</output></div>
-    <p class="hint">「ぶつ切り」をオンにすると、声が1マス分で切れて、どもったような反復になる。</p>
+    <p class="hint">「ぶつ切り」をオンにすると、声が1マス分で切れる。声の列に×2〜×4を入れると、どもったような連打になる。</p>
   </section>
 
   <section class="plate panel" aria-label="音とパターン">
-    <h2>音とパターン</h2>
+    <h2>メロディの楽器</h2>
     <div class="btns">
-      <select id="tone" aria-label="メロディの音色"><option value="square">ピコピコ</option><option value="bass">ぶっといベース</option><option value="soft">ふわふわ</option></select>
+      <select id="tone" aria-label="メロディの楽器"></select>
       <select id="key" aria-label="キー"><option value="0">キー C</option><option value="2">キー D</option><option value="3">キー E♭</option><option value="5">キー F</option><option value="7">キー G</option><option value="9">キー A</option></select>
+      <button id="tryTone" class="btn" type="button">試す</button>
     </div>
+    <h2>パターン</h2>
     <div class="btns" id="presets"></div>
     <div class="btns">
       <button id="clear" class="btn" type="button">全部消す</button>
@@ -119,7 +150,15 @@ select{border:1px solid var(--line);background:var(--plate2);border-radius:10px;
       <select id="slots" aria-label="保存したパターン"><option value="">保存したパターン</option></select>
       <button id="share" class="btn" type="button">友達に送る</button>
     </div>
-    <p class="hint">音が出ないときは、iPhoneの消音スイッチと音量を確認してね。友達に送るリンクには声の録音は入らない。</p>
+  </section>
+
+  <section class="plate panel" aria-label="書き出し">
+    <h2>音声ファイルに書き出す</h2>
+    <div class="btns">
+      <select id="loops" aria-label="繰り返す回数"><option value="2">2回くり返し</option><option value="4" selected>4回くり返し</option><option value="8">8回くり返し</option></select>
+      <button id="export" class="btn big" type="button">書き出す</button>
+    </div>
+    <p class="hint">録音した声も入る。書き出したら共有画面からLINEやファイルに送れる。音が出ないときは、iPhoneの消音スイッチと音量を確認してね。</p>
   </section>
 </div>
 <div id="toast" class="toast" role="status" hidden></div>
@@ -128,26 +167,62 @@ select{border:1px solid var(--line);background:var(--plate2);border-radius:10px;
 "use strict";
 const $ = id => document.getElementById(id);
 const STEPS = 16;
-const DRUMS = [
-  { k: "kick", name: "キック", col: "var(--kick)" },
-  { k: "snare", name: "スネア", col: "var(--snare)" },
-  { k: "hat", name: "ハット", col: "var(--hat)" },
-  { k: "clap", name: "クラップ", col: "var(--clap)" },
-];
-const MEL_ROWS = 6;                          // 上から高い音:ペンタトニック 6音
-const PENTA = [0, 2, 4, 7, 9, 12];           // 度数(半音)
-const NOTE_NAMES = ["ド", "レ", "ミ", "ソ", "ラ", "ド↑"];
+
+// ---------- instruments ----------
+// リズム楽器(行を足したり消したりできる)
+const DRUMS = {
+  kick:   { name: "キック",     col: "#ff7a3d" },
+  snare:  { name: "スネア",     col: "#4fd1e8" },
+  hat:    { name: "ハット",     col: "#ffd23f" },
+  clap:   { name: "クラップ",   col: "#ff6fae" },
+  ohat:   { name: "オープンH",  col: "#f2e8a0" },
+  sub:    { name: "808ベース",  col: "#ff9d6e" },
+  tomL:   { name: "タム低",     col: "#e58f5a" },
+  tomH:   { name: "タム高",     col: "#f0b07a" },
+  rim:    { name: "リム",       col: "#7fd8c8" },
+  snap:   { name: "指パッチン", col: "#ff9fd0" },
+  cow:    { name: "カウベル",   col: "#ffe08a" },
+  shaker: { name: "シェイカー", col: "#d8e86a" },
+  clave:  { name: "クラベス",   col: "#c6a7ff" },
+  crash:  { name: "シンバル",   col: "#cfd6e6" },
+};
+// メロディの楽器
+const TONES = {
+  square: "ピコピコ", lead: "ギラギラリード", soft: "ふわふわ", bell: "ベル", organ: "オルガン",
+  piano: "ピアノっぽい", pluck: "ポロン(弦)", bass: "ぶっといベース", b808: "808ベース(長く伸びる)",
+};
+$("tone").innerHTML = Object.entries(TONES).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
+const MEL_ROWS = 6, PENTA = [0, 2, 4, 7, 9, 12], NOTE_NAMES = ["ド", "レ", "ミ", "ソ", "ラ", "ド↑"];
+// マスの値: 0=なし 1=強 2=弱 3=×2 4=×3 5=×4
+const ROLL = { 3: 2, 4: 3, 5: 4 };
+const VEL = v => v === 2 ? 0.38 : v ? 1 : 0;
 
 // ---------- pattern ----------
-const blank = () => ({ kick: Array(STEPS).fill(0), snare: Array(STEPS).fill(0), hat: Array(STEPS).fill(0), clap: Array(STEPS).fill(0), voice: Array(STEPS).fill(0), mel: Array(STEPS).fill(-1) });
-const p16 = s => s.split("").map(c => c === "x" ? 1 : 0);
+const z = () => Array(STEPS).fill(0);
+const s16 = s => s.split("").map(c => c === "x" ? 1 : c === "o" ? 2 : c === "2" ? 3 : c === "3" ? 4 : c === "4" ? 5 : 0);
+const mk = (o) => ({ bpm: o.bpm, swing: o.swing, tone: o.tone || "square", key: o.key || 0, tracks: o.tracks.map(([inst, s]) => ({ inst, steps: s16(s) })), voice: s16(o.voice), mel: o.mel.slice() });
 const PRESETS = {
-  "ゆるヒップホップ": { bpm: 88, swing: 18, kick: p16("x.....x...x....."), snare: p16("....x.......x..."), hat: p16("x.x.x.x.x.x.x.xx"), clap: p16("................"), voice: p16("x.......x......."), mel: [0,-1,-1,2,-1,-1,3,-1,0,-1,-1,2,-1,4,-1,-1] },
-  "四つ打ち": { bpm: 124, swing: 0, kick: p16("x...x...x...x..."), snare: p16("................"), hat: p16("..x...x...x...x."), clap: p16("....x.......x..."), voice: p16("x...............") , mel: [0,-1,0,-1,-1,-1,5,-1,0,-1,0,-1,-1,-1,4,-1] },
-  "トラップ風": { bpm: 140, swing: 0, kick: p16("x......x..x....."), snare: p16("........x......."), hat: p16("x.xxx.x.x.xxxxxx"), clap: p16("........x......."), voice: p16("x.x.x.........x."), mel: [0,-1,-1,-1,-1,-1,-1,-1,1,-1,-1,-1,0,-1,-1,-1] },
-  "連呼だけ": { bpm: 100, swing: 0, kick: p16("x.......x......."), snare: p16("................"), hat: p16("................"), clap: p16("....x.......x..."), voice: p16("x.x.x.x.x.x.x.x."), mel: Array(16).fill(-1) },
+  "ゆるヒップホップ": mk({ bpm: 88, swing: 18, tracks: [["kick", "x.....x...x....."], ["snare", "....x.......x..."], ["hat", "xoxoxoxoxoxoxo2o"], ["clap", "................"]], voice: "x.......x.......", mel: [0,-1,-1,2,-1,-1,3,-1,0,-1,-1,2,-1,4,-1,-1] }),
+  "四つ打ち": mk({ bpm: 124, swing: 0, tone: "lead", tracks: [["kick", "x...x...x...x..."], ["snare", "................"], ["hat", "..x...x...x...x."], ["clap", "....x.......x..."]], voice: "x...............", mel: [0,-1,0,-1,-1,-1,5,-1,0,-1,0,-1,-1,-1,4,-1] }),
+  "トラップ風": mk({ bpm: 140, swing: 0, tone: "b808", tracks: [["kick", "x......x..x....."], ["snare", "........x......."], ["hat", "x.3.x.x.x.2.4.x2"], ["clap", "........x......."]], voice: "x.x.x.........x.", mel: [0,-1,-1,-1,-1,-1,-1,-1,1,-1,-1,-1,0,-1,-1,-1] }),
+  "連呼だけ": mk({ bpm: 100, swing: 0, tracks: [["kick", "x.......x......."], ["snare", "................"], ["hat", "................"], ["clap", "....x.......x..."]], voice: "x.x.x.x.x.x.x.4.", mel: Array(16).fill(-1) }),
 };
-let pat = blank(); Object.assign(pat, JSON.parse(JSON.stringify(PRESETS["ゆるヒップホップ"])));
+const clone = o => JSON.parse(JSON.stringify(o));
+// 古い形式(kick/snare/hat/clap を直接持つ)を新しい形式に直す
+function normalize(p) {
+  if (!p) return null;
+  if (!p.tracks) {
+    p = { ...p, tracks: ["kick", "snare", "hat", "clap"].map(k => ({ inst: k, steps: (p[k] || z()).map(v => v ? 1 : 0) })) };
+    for (const k of ["kick", "snare", "hat", "clap"]) delete p[k];
+  }
+  p.tracks = p.tracks.filter(t => DRUMS[t.inst]).map(t => ({ inst: t.inst, steps: (t.steps || z()).slice(0, STEPS).map(v => Math.max(0, Math.min(5, +v || 0))) }));
+  p.voice = (p.voice || z()).slice(0, STEPS).map(v => Math.max(0, Math.min(5, +v || 0)));
+  p.mel = (p.mel || Array(STEPS).fill(-1)).slice(0, STEPS).map(v => (v >= 0 && v < MEL_ROWS) ? +v : -1);
+  p.bpm = Math.min(180, Math.max(60, +p.bpm || 92)); p.swing = Math.min(60, Math.max(0, +p.swing || 0));
+  p.tone = TONES[p.tone] ? p.tone : "square"; p.key = [0, 2, 3, 5, 7, 9].includes(+p.key) ? +p.key : 0;
+  return p;
+}
+let pat = clone(PRESETS["ゆるヒップホップ"]);
 
 const store = {
   get(k, d) { try { const v = localStorage.getItem("loop." + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -155,106 +230,186 @@ const store = {
 };
 
 // ---------- grid ----------
-const cells = {};   // key -> array of buttons
+let mode = 1;
+$("modes").addEventListener("click", e => {
+  const b = e.target.closest("[data-m]"); if (!b) return;
+  mode = +b.dataset.m; for (const x of $("modes").querySelectorAll("[data-m]")) x.setAttribute("aria-pressed", String(x === b));
+});
+const cellLabel = v => v >= 3 ? "×" + ROLL[v] : "";
+function rowHTML(key, label, col, removable) {
+  let h = `<div class="lab"><span class="sw" style="background:${col}"></span><button type="button" class="nm" data-try="${key}">${label}</button>${removable ? `<button type="button" class="x" data-del="${key}" aria-label="${label}の行を消す">×</button>` : ""}</div>`;
+  for (let i = 0; i < STEPS; i++) h += `<button type="button" class="c${i % 4 === 0 ? " q" : ""}" style="--col:${col}" data-r="${key}" data-i="${i}" aria-label="${label} ${i + 1}"></button>`;
+  return h;
+}
 function buildGrid() {
-  const g = $("grid"); let h = `<div class="lab"></div>`;
+  let h = `<div class="lab" style="height:8px"></div>`;
   for (let i = 0; i < STEPS; i++) h += `<div class="c head" data-head="${i}"></div>`;
-  for (const d of DRUMS) {
-    h += `<div class="lab"><b style="background:${d.col}"></b>${d.name}</div>`;
-    for (let i = 0; i < STEPS; i++) h += `<button type="button" class="c${i % 4 === 0 ? " q" : ""}" style="--col:${d.col}" data-r="${d.k}" data-i="${i}" aria-label="${d.name} ${i + 1}"></button>`;
+  pat.tracks.forEach((t, ti) => { h += rowHTML("t" + ti, DRUMS[t.inst].name, DRUMS[t.inst].col, true); });
+  const unused = Object.keys(DRUMS).filter(k => !pat.tracks.some(t => t.inst === k));
+  if (unused.length && pat.tracks.length < 10) {
+    h += `<div class="addrow"><select id="addInst" aria-label="リズム楽器を足す"><option value="">＋ リズム楽器を足す</option>${unused.map(k => `<option value="${k}">${DRUMS[k].name}</option>`).join("")}</select></div>`;
   }
-  h += `<div class="lab"><b style="background:var(--voice)"></b>声</div>`;
-  for (let i = 0; i < STEPS; i++) h += `<button type="button" class="c${i % 4 === 0 ? " q" : ""}" style="--col:var(--voice)" data-r="voice" data-i="${i}" aria-label="声 ${i + 1}"></button>`;
+  h += rowHTML("voice", "声", "var(--voice)", false);
   h += `<div class="sep"></div>`;
   for (let r = MEL_ROWS - 1; r >= 0; r--) {
-    h += `<div class="lab"><b style="background:var(--mel)"></b>${NOTE_NAMES[r]}</div>`;
+    h += `<div class="lab"><span class="sw" style="background:var(--mel)"></span><button type="button" class="nm" data-try="m${r}">${NOTE_NAMES[r]}</button></div>`;
     for (let i = 0; i < STEPS; i++) h += `<button type="button" class="c${i % 4 === 0 ? " q" : ""}" style="--col:var(--mel)" data-r="mel" data-n="${r}" data-i="${i}" aria-label="メロディ ${NOTE_NAMES[r]} ${i + 1}"></button>`;
   }
-  g.innerHTML = h;
+  $("grid").innerHTML = h;
+  const add = $("addInst");
+  if (add) add.onchange = () => { if (!add.value) return; pat.tracks.push({ inst: add.value, steps: z() }); ensureAudio(); hit(add.value, ctx.currentTime, 1); buildGrid(); paint(); };
 }
+const stepsOf = r => r === "voice" ? pat.voice : pat.tracks[+r.slice(1)].steps;
 function paint() {
   for (const b of $("grid").querySelectorAll("button.c")) {
     const r = b.dataset.r, i = +b.dataset.i;
-    const on = r === "mel" ? pat.mel[i] === +b.dataset.n : !!pat[r][i];
-    b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on));
+    if (r === "mel") { const on = pat.mel[i] === +b.dataset.n; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); continue; }
+    const v = stepsOf(r)[i];
+    b.classList.toggle("on", v === 1 || v >= 3); b.classList.toggle("weak", v === 2);
+    b.textContent = cellLabel(v); b.setAttribute("aria-pressed", String(!!v));
   }
-  $("bpm").value = pat.bpm; $("swing").value = pat.swing; syncDials();
+  $("bpm").value = pat.bpm; $("swing").value = pat.swing; $("tone").value = pat.tone; $("key").value = pat.key; syncDials();
 }
 $("grid").addEventListener("click", e => {
-  const b = e.target.closest("button.c"); if (!b) return;
   ensureAudio();
+  const del = e.target.closest("[data-del]");
+  if (del) { pat.tracks.splice(+del.dataset.del.slice(1), 1); buildGrid(); paint(); return; }
+  const tr = e.target.closest("[data-try]");
+  if (tr) { const k = tr.dataset.try; if (k === "voice") playVoice(ctx.currentTime, 1, 1); else if (k[0] === "m") playMel(+k.slice(1), ctx.currentTime, 0.25); else hit(pat.tracks[+k.slice(1)].inst, ctx.currentTime, 1); return; }
+  const b = e.target.closest("button.c"); if (!b) return;
   const r = b.dataset.r, i = +b.dataset.i;
-  if (r === "mel") { const n = +b.dataset.n; pat.mel[i] = pat.mel[i] === n ? -1 : n; if (pat.mel[i] >= 0 && !playing) playMel(n, ctx.currentTime, 0.18); }
-  else { pat[r][i] = pat[r][i] ? 0 : 1; if (pat[r][i] && !playing) trigger(r, ctx.currentTime); }
+  if (r === "mel") { const n = +b.dataset.n; pat.mel[i] = pat.mel[i] === n ? -1 : n; if (pat.mel[i] >= 0 && !playing) playMel(n, ctx.currentTime, 0.2); }
+  else {
+    const st = stepsOf(r); st[i] = st[i] === mode ? 0 : mode;
+    if (st[i] && !playing) playStep(r === "voice" ? "voice" : pat.tracks[+r.slice(1)].inst, st[i], ctx.currentTime, stepDur());
+  }
   paint();
 });
 
 // ---------- audio ----------
-let ctx = null, master = null, noiseBuf = null, voiceBuf = null;
+let ctx = null, A = null, noiseBuf = null, voiceBuf = null;   // A = いま音を作っている先(画面の再生 or 書き出し)
+function makeEnv(c) {
+  const comp = c.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 8; comp.attack.value = 0.002; comp.release.value = 0.15;
+  const master = c.createGain(); master.gain.value = 0.62; master.connect(comp); comp.connect(c.destination);
+  return { c, master };
+}
 function ensureAudio() {
   if (!ctx) {
     try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}   // 消音スイッチでも鳴らす(対応しているiOSのみ)
     ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4;
-    master = ctx.createGain(); master.gain.value = 0.8; master.connect(comp); comp.connect(ctx.destination);
+    A = makeEnv(ctx);
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
     const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     restoreVoice();
   }
   if (ctx.state !== "running") ctx.resume();
 }
-function env(g, t, a, peak, dec) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); }
-function noise(t, dur) { const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.start(t); s.stop(t + dur); return s; }
+function env(g, t, a, peak, dec) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); }
+function noise(t, dur) { const s = A.c.createBufferSource(); s.buffer = noiseBuf; s.loop = true; s.start(t, Math.random() * 0.5); s.stop(t + dur); return s; }
+function osc(type, f, t, dur) { const o = A.c.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); o.start(t); o.stop(t + dur); return o; }
+function filt(type, f, q) { const x = A.c.createBiquadFilter(); x.type = type; x.frequency.value = f; if (q) x.Q.value = q; return x; }
+function vgain(v) { const g = A.c.createGain(); g.gain.value = v; g.connect(A.master); return g; }
 const SYN = {
-  kick(t) {
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
-    env(g, t, 0.003, 1, 0.42); o.connect(g).connect(master); o.start(t); o.stop(t + 0.5);
+  kick(t, out) { const o = osc("sine", 160, t, 0.5), g = A.c.createGain(); o.frequency.exponentialRampToValueAtTime(42, t + 0.14); env(g, t, 0.003, 1, 0.42); o.connect(g).connect(out); },
+  snare(t, out) {
+    const g = A.c.createGain(); env(g, t, 0.002, 0.7, 0.18); noise(t, 0.25).connect(filt("highpass", 1200)).connect(g).connect(out);
+    const g2 = A.c.createGain(); env(g2, t, 0.002, 0.5, 0.1); osc("triangle", 190, t, 0.15).connect(g2).connect(out);
   },
-  snare(t) {
-    const n = noise(t, 0.25), f = ctx.createBiquadFilter(), g = ctx.createGain();
-    f.type = "highpass"; f.frequency.value = 1200; env(g, t, 0.002, 0.7, 0.18); n.connect(f).connect(g).connect(master);
-    const o = ctx.createOscillator(), g2 = ctx.createGain(); o.type = "triangle"; o.frequency.value = 190;
-    env(g2, t, 0.002, 0.5, 0.1); o.connect(g2).connect(master); o.start(t); o.stop(t + 0.15);
+  hat(t, out) { const g = A.c.createGain(); env(g, t, 0.001, 0.32, 0.045); noise(t, 0.08).connect(filt("highpass", 7500)).connect(g).connect(out); },
+  ohat(t, out) { const g = A.c.createGain(); env(g, t, 0.002, 0.28, 0.32); noise(t, 0.4).connect(filt("highpass", 6500)).connect(g).connect(out); },
+  clap(t, out) {
+    const f = filt("bandpass", 1500, 0.8); f.connect(out);
+    for (const [dt, pk, dec] of [[0, 0.5, 0.02], [0.012, 0.5, 0.02], [0.024, 0.7, 0.16]]) { const g = A.c.createGain(); env(g, t + dt, 0.001, pk, dec); noise(t + dt, dec + 0.05).connect(g).connect(f); }
   },
-  hat(t) {
-    const n = noise(t, 0.08), f = ctx.createBiquadFilter(), g = ctx.createGain();
-    f.type = "highpass"; f.frequency.value = 7500; env(g, t, 0.001, 0.32, 0.045); n.connect(f).connect(g).connect(master);
+  sub(t, out) {
+    const o = osc("sine", 70, t, 1.1), g = A.c.createGain(), sh = A.c.createWaveShaper();
+    o.frequency.exponentialRampToValueAtTime(48, t + 0.12);
+    const curve = new Float32Array(256); for (let i = 0; i < 256; i++) { const x = i / 128 - 1; curve[i] = Math.tanh(x * 2.2); } sh.curve = curve;
+    env(g, t, 0.004, 0.9, 0.9); o.connect(sh).connect(g).connect(out);
   },
-  clap(t) {
-    const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1500; f.Q.value = 0.8; f.connect(master);
-    for (const [dt, pk, dec] of [[0, 0.5, 0.02], [0.012, 0.5, 0.02], [0.024, 0.7, 0.16]]) { const g = ctx.createGain(); env(g, t + dt, 0.001, pk, dec); noise(t + dt, dec + 0.05).connect(g).connect(f); }
+  tomL(t, out) { const o = osc("sine", 120, t, 0.4), g = A.c.createGain(); o.frequency.exponentialRampToValueAtTime(80, t + 0.25); env(g, t, 0.003, 0.9, 0.3); o.connect(g).connect(out); },
+  tomH(t, out) { const o = osc("sine", 200, t, 0.35), g = A.c.createGain(); o.frequency.exponentialRampToValueAtTime(140, t + 0.2); env(g, t, 0.003, 0.8, 0.24); o.connect(g).connect(out); },
+  rim(t, out) {
+    const g = A.c.createGain(); env(g, t, 0.001, 0.6, 0.03); osc("triangle", 1700, t, 0.05).connect(g).connect(out);
+    const g2 = A.c.createGain(); env(g2, t, 0.001, 0.3, 0.02); noise(t, 0.04).connect(filt("highpass", 3000)).connect(g2).connect(out);
   },
+  snap(t, out) { const g = A.c.createGain(); env(g, t, 0.001, 0.8, 0.05); noise(t, 0.08).connect(filt("bandpass", 2600, 3)).connect(g).connect(out); },
+  cow(t, out) {
+    const f = filt("bandpass", 800, 2), g = A.c.createGain(); env(g, t, 0.002, 0.5, 0.26);
+    osc("square", 540, t, 0.32).connect(f); osc("square", 800, t, 0.32).connect(f); f.connect(g).connect(out);
+  },
+  shaker(t, out) { const g = A.c.createGain(); env(g, t, 0.012, 0.25, 0.06); noise(t, 0.1).connect(filt("bandpass", 6500, 1.5)).connect(g).connect(out); },
+  clave(t, out) { const g = A.c.createGain(); env(g, t, 0.001, 0.6, 0.06); osc("sine", 2500, t, 0.08).connect(g).connect(out); },
+  crash(t, out) { const g = A.c.createGain(); env(g, t, 0.003, 0.32, 1.3); noise(t, 1.5).connect(filt("highpass", 4200)).connect(g).connect(out); },
 };
-function trigger(k, t) { if (k === "voice") playVoice(t); else SYN[k](t); }
+function hit(inst, t, vel) { SYN[inst](t, vgain(vel)); }
+// 1マス分を鳴らす(強弱とロール)
+function playStep(inst, v, t, dur) {
+  if (!v) return;
+  const n = ROLL[v] || 1, vel = VEL(v);
+  for (let k = 0; k < n; k++) {
+    const tt = t + dur * k / n, vv = n > 1 ? vel * (0.6 + 0.4 * (k + 1) / n) : vel;   // ロールはだんだん強く
+    if (inst === "voice") playVoice(tt, vv, n > 1 ? dur / n : 0); else hit(inst, tt, vv);
+  }
+}
 function playMel(n, t, dur) {
-  const tone = $("tone").value, key = +$("key").value;
-  const base = tone === "bass" ? 36 : 60;          // MIDI C2 / C4
-  const midi = base + key + PENTA[n];
-  const f = 440 * Math.pow(2, (midi - 69) / 12);
-  const o = ctx.createOscillator(), g = ctx.createGain(), flt = ctx.createBiquadFilter();
-  flt.type = "lowpass";
-  if (tone === "square") { o.type = "square"; flt.frequency.value = 2400; env(g, t, 0.005, 0.16, dur); }
-  else if (tone === "bass") { o.type = "sawtooth"; flt.frequency.setValueAtTime(900, t); flt.frequency.exponentialRampToValueAtTime(180, t + dur); env(g, t, 0.005, 0.4, dur * 1.3); }
-  else { o.type = "triangle"; flt.frequency.value = 1800; env(g, t, 0.03, 0.28, dur * 1.6); }
-  o.frequency.value = f; o.connect(flt).connect(g).connect(master); o.start(t); o.stop(t + dur * 2 + 0.1);
+  const tone = pat.tone, key = pat.key;
+  const low = tone === "bass" || tone === "b808";
+  const midi = (low ? 36 : 60) + key + PENTA[n], f = 440 * Math.pow(2, (midi - 69) / 12);
+  const g = A.c.createGain(); g.connect(A.master);
+  if (tone === "square") { const o = osc("square", f, t, dur * 2 + 0.1), lp = filt("lowpass", 2400); env(g, t, 0.005, 0.16, dur); o.connect(lp).connect(g); }
+  else if (tone === "lead") {
+    const lp = filt("lowpass", 3200); env(g, t, 0.008, 0.14, dur * 1.1);
+    for (const d of [-9, 9]) { const o = osc("sawtooth", f, t, dur * 2 + 0.1); o.detune.value = d; o.connect(lp); } lp.connect(g);
+  }
+  else if (tone === "soft") { const o = osc("triangle", f, t, dur * 3 + 0.2), lp = filt("lowpass", 1800); env(g, t, 0.04, 0.28, dur * 1.8); o.connect(lp).connect(g); }
+  else if (tone === "bell") {
+    const car = osc("sine", f, t, 2), mod = osc("sine", f * 3.5, t, 2), mg = A.c.createGain();
+    mg.gain.setValueAtTime(f * 2.2, t); mg.gain.exponentialRampToValueAtTime(1, t + 1.2); mod.connect(mg).connect(car.frequency);
+    env(g, t, 0.002, 0.3, 1.4); car.connect(g);
+  }
+  else if (tone === "organ") {
+    env(g, t, 0.01, 0.12, dur * 1.1);
+    for (const [m, a] of [[1, 1], [2, 0.5], [3, 0.3], [4, 0.2]]) { const o = osc("sine", f * m, t, dur * 2 + 0.1), og = A.c.createGain(); og.gain.value = a; o.connect(og).connect(g); }
+  }
+  else if (tone === "piano") {
+    env(g, t, 0.003, 0.3, 0.9);
+    const o1 = osc("triangle", f, t, 1.2), o2 = osc("sine", f * 2, t, 1.2), g2 = A.c.createGain(); g2.gain.value = 0.25;
+    const lp = filt("lowpass", 3000); lp.frequency.setValueAtTime(3000, t); lp.frequency.exponentialRampToValueAtTime(700, t + 0.6);
+    o1.connect(lp); o2.connect(g2).connect(lp); lp.connect(g);
+  }
+  else if (tone === "pluck") {
+    const lp = filt("lowpass", 4000, 6); lp.frequency.setValueAtTime(5000, t); lp.frequency.exponentialRampToValueAtTime(300, t + 0.35);
+    env(g, t, 0.002, 0.3, 0.5); osc("sawtooth", f, t, 0.7).connect(lp).connect(g);
+  }
+  else if (tone === "bass") {
+    const o = osc("sawtooth", f, t, dur * 2 + 0.2), lp = filt("lowpass", 900); lp.frequency.setValueAtTime(900, t); lp.frequency.exponentialRampToValueAtTime(180, t + dur);
+    env(g, t, 0.005, 0.4, dur * 1.3); o.connect(lp).connect(g);
+  }
+  else if (tone === "b808") {
+    const o = osc("sine", f * 1.5, t, 1.6), sh = A.c.createWaveShaper();
+    o.frequency.exponentialRampToValueAtTime(f, t + 0.06);
+    const curve = new Float32Array(256); for (let i = 0; i < 256; i++) { const x = i / 128 - 1; curve[i] = Math.tanh(x * 2.5); } sh.curve = curve;
+    env(g, t, 0.004, 0.55, 1.3); o.connect(sh).connect(g);
+  }
 }
 
 // ---------- voice recording ----------
 let chop = false;
-function playVoice(t) {
+function playVoice(t, vel = 1, len = 0) {
   if (!voiceBuf) return;
-  const s = ctx.createBufferSource(), g = ctx.createGain();
+  const s = A.c.createBufferSource(), g = A.c.createGain();
   s.buffer = voiceBuf; s.playbackRate.value = Math.pow(2, (+$("vpitch").value) / 12);
-  g.gain.value = 1; s.connect(g).connect(master); s.start(t);
-  if (chop) { const len = stepDur() * 0.95; g.gain.setValueAtTime(1, t + len - 0.01); g.gain.linearRampToValueAtTime(0, t + len); s.stop(t + len + 0.01); }
+  g.gain.value = vel; s.connect(g).connect(A.master); s.start(t);
+  const cut = len || (chop ? stepDur() * 0.95 : 0);
+  if (cut) { g.gain.setValueAtTime(vel, t + Math.max(0.01, cut - 0.01)); g.gain.linearRampToValueAtTime(0, t + cut); s.stop(t + cut + 0.01); }
 }
 function trimSilence(buf) {
   const d = buf.getChannelData(0); let a = 0, b = d.length - 1;
   while (a < d.length && Math.abs(d[a]) < 0.03) a++;
   while (b > a && Math.abs(d[b]) < 0.02) b--;
-  a = Math.max(0, a - Math.floor(ctx.sampleRate * 0.01)); b = Math.min(d.length - 1, b + Math.floor(ctx.sampleRate * 0.05));
-  const out = ctx.createBuffer(1, Math.max(1, b - a), ctx.sampleRate);
+  a = Math.max(0, a - Math.floor(buf.sampleRate * 0.01)); b = Math.min(d.length - 1, b + Math.floor(buf.sampleRate * 0.05));
+  const out = ctx.createBuffer(1, Math.max(1, b - a), buf.sampleRate);
   const o = out.getChannelData(0); let peak = 0;
   for (let i = 0; i < o.length; i++) { o[i] = d[a + i]; peak = Math.max(peak, Math.abs(o[i])); }
   if (peak > 0) for (let i = 0; i < o.length; i++) o[i] = o[i] / peak * 0.9;   // 音量をそろえる
@@ -321,14 +476,17 @@ function restoreVoice() {
 // ---------- sequencer (look-ahead scheduling) ----------
 let playing = false, step = 0, nextT = 0, timer = null, queue = [];
 const stepDur = () => 60 / pat.bpm / 4;
+function scheduleStep(s, t) {
+  const d = stepDur();
+  for (const tr of pat.tracks) playStep(tr.inst, tr.steps[s], t, d);
+  playStep("voice", pat.voice[s], t, d);
+  if (pat.mel[s] >= 0) playMel(pat.mel[s], t, d * 0.9);
+}
+const swingOff = s => s % 2 === 1 ? stepDur() * (pat.swing / 100) * 0.66 : 0;
 function schedule() {
   while (nextT < ctx.currentTime + 0.12) {
-    const swingOff = step % 2 === 1 ? stepDur() * (pat.swing / 100) * 0.66 : 0;
-    const t = nextT + swingOff;
-    for (const d of DRUMS) if (pat[d.k][step]) SYN[d.k](t);
-    if (pat.voice[step]) playVoice(t);
-    if (pat.mel[step] >= 0) playMel(pat.mel[step], t, stepDur() * 0.9);
-    queue.push({ step, t });
+    const t = nextT + swingOff(step);
+    scheduleStep(step, t); queue.push({ step, t });
     nextT += stepDur(); step = (step + 1) % STEPS;
   }
 }
@@ -353,64 +511,160 @@ function stop() {
   $("play").classList.remove("on"); $("play").textContent = "再生"; $("play").setAttribute("aria-pressed", "false");
 }
 $("play").onclick = () => playing ? stop() : start();
-function syncDials() { $("bpmV").textContent = $("bpm").value; $("swingV").textContent = $("swing").value + "%"; $("vpitchV").textContent = (+$("vpitch").value > 0 ? "+" : +$("vpitch").value < 0 ? "" : "±") + $("vpitch").value; }
+function syncDials() { $("bpmV").textContent = $("bpm").value; $("swingV").textContent = $("swing").value + "%"; const v = +$("vpitch").value; $("vpitchV").textContent = (v > 0 ? "+" : v < 0 ? "" : "±") + v; }
 $("bpm").oninput = () => { pat.bpm = +$("bpm").value; syncDials(); };
 $("swing").oninput = () => { pat.swing = +$("swing").value; syncDials(); };
 $("vpitch").oninput = () => { syncDials(); store.set("vpitch", +$("vpitch").value); };
+$("tone").onchange = () => { pat.tone = $("tone").value; tryTone(); };
+$("key").onchange = () => { pat.key = +$("key").value; };
+function tryTone() { ensureAudio(); const t = ctx.currentTime, d = 0.16; [0, 2, 3, 4].forEach((n, i) => playMel(n, t + i * d, d * 0.9)); }
+$("tryTone").onclick = tryTone;
 document.addEventListener("visibilitychange", () => { if (document.hidden && playing) stop(); });
+
+// ---------- random ----------
+const R = Math.random, pick = a => a[Math.floor(R() * a.length)], chance = p => R() < p;
+function randomPattern(genre) {
+  if (genre === "any") genre = pick(["hiphop", "lofi", "four", "trap"]);
+  const keep = pat.tracks.map(t => t.inst);
+  const need = { hiphop: ["kick", "snare", "hat"], lofi: ["kick", "snare", "hat"], four: ["kick", "hat", "clap"], trap: ["kick", "hat", "clap"] }[genre];
+  const insts = [...new Set([...need, ...keep])].slice(0, 10);
+  const p = { tracks: insts.map(inst => ({ inst, steps: z() })), voice: z(), mel: Array(STEPS).fill(-1) };
+  const T = k => p.tracks.find(t => t.inst === k)?.steps;
+  const on = (k, i, v = 1) => { const s = T(k); if (s) s[i] = v; };
+  if (genre === "hiphop" || genre === "lofi") {
+    p.bpm = genre === "lofi" ? 70 + Math.floor(R() * 16) : 84 + Math.floor(R() * 13);
+    p.swing = genre === "lofi" ? 20 + Math.floor(R() * 12) : 10 + Math.floor(R() * 16);
+    on("kick", 0); for (const i of [3, 6, 7, 10, 11, 14]) if (chance(i === 10 ? 0.7 : 0.25)) on("kick", i, chance(0.3) ? 2 : 1);
+    on("snare", 4); on("snare", 12); if (chance(0.4)) on("snare", pick([7, 9, 15]), 2);
+    for (let i = 0; i < STEPS; i += 2) on("hat", i, i % 4 === 0 ? 1 : 2);
+    if (genre === "hiphop" && chance(0.6)) on("hat", pick([13, 14, 15]), pick([3, 4]));
+    p.tone = pick(genre === "lofi" ? ["soft", "piano", "bell", "pluck"] : ["piano", "pluck", "bass", "organ", "square"]);
+  } else if (genre === "four") {
+    p.bpm = 118 + Math.floor(R() * 11); p.swing = 0;
+    for (const i of [0, 4, 8, 12]) on("kick", i);
+    for (const i of [2, 6, 10, 14]) on("hat", i); for (let i = 1; i < STEPS; i += 2) if (chance(0.35)) on("hat", i, 2);
+    on("clap", 4); on("clap", 12);
+    on("ohat", 2); on("ohat", 10);
+    p.tone = pick(["lead", "square", "organ", "bell"]);
+  } else {
+    p.bpm = 130 + Math.floor(R() * 21); p.swing = 0;
+    on("kick", 0); for (const i of [3, 7, 10, 11, 14]) if (chance(0.35)) on("kick", i);
+    on("clap", 8); on("snare", 8);
+    for (let i = 0; i < STEPS; i += 2) on("hat", i, chance(0.25) ? pick([3, 4, 5]) : 1);
+    for (let i = 1; i < STEPS; i += 2) if (chance(0.2)) on("hat", i, 2);
+    p.tone = pick(["b808", "bell", "lead", "pluck"]);
+  }
+  // 足してある楽器はまばらに
+  const core = ["kick", "snare", "hat", "clap", "ohat"];
+  for (const t of p.tracks) if (!core.includes(t.inst)) for (let i = 0; i < STEPS; i++) if (chance(t.inst === "sub" ? 0 : 0.12)) t.steps[i] = chance(0.6) ? 2 : 1;
+  if (T("sub")) T("kick").forEach((v, i) => { if (v === 1) T("sub")[i] = 1; });
+  // 声:反復が「クセ」になるように
+  const vp = pick([[0, 8], [0, 4, 8, 12], [0, 2, 4, 6], [0, 3, 6, 8, 11, 14], [0, 14]]);
+  for (const i of vp) p.voice[i] = 1; if (chance(0.5)) p.voice[pick([12, 14, 15])] = pick([3, 4, 5]);
+  // メロディ:4マスの短いモチーフを繰り返して、最後だけ少し変える
+  const motif = [pick([0, 0, 2, 4]), chance(0.5) ? -1 : pick([0, 1, 2, 3]), chance(0.5) ? pick([2, 3, 4]) : -1, chance(0.6) ? -1 : pick([1, 3, 5])];
+  for (let i = 0; i < STEPS; i++) p.mel[i] = motif[i % 4];
+  if (chance(0.7)) { p.mel[12] = pick([3, 4, 5]); p.mel[14] = pick([-1, 2, 4]); }
+  if (genre === "trap" || chance(0.25)) for (let i = 0; i < STEPS; i++) if (i % 4 && chance(0.5)) p.mel[i] = -1;
+  p.key = pick([0, 2, 3, 5, 7, 9]);
+  return normalize(p);
+}
+$("dice").onclick = () => { pat = randomPattern($("genre").value); buildGrid(); paint(); if (!playing) start(); };
 
 // ---------- presets, save, share ----------
 $("presets").innerHTML = Object.keys(PRESETS).map(n => `<button type="button" class="btn" data-p="${n}">${n}</button>`).join("");
 $("presets").addEventListener("click", e => {
   const b = e.target.closest("[data-p]"); if (!b) return;
-  pat = { ...blank(), ...JSON.parse(JSON.stringify(PRESETS[b.dataset.p])) }; paint(); toast(b.dataset.p + "を読み込みました");
+  pat = clone(PRESETS[b.dataset.p]); buildGrid(); paint(); toast(b.dataset.p + "を読み込みました");
 });
-$("clear").onclick = () => { const k = { bpm: pat.bpm, swing: pat.swing }; pat = { ...blank(), ...k }; paint(); };
+$("clear").onclick = () => { for (const t of pat.tracks) t.steps = z(); pat.voice = z(); pat.mel = Array(STEPS).fill(-1); paint(); };
 function renderSlots() {
   const s = store.get("slots", []);
-  $("slots").innerHTML = `<option value="">保存したパターン(${s.length})</option>` + s.map((x, i) => `<option value="${i}">${x.name.replace(/[<&]/g, "")}</option>`).join("");
+  $("slots").innerHTML = `<option value="">保存したパターン(${s.length})</option>` + s.map((x, i) => `<option value="${i}">${String(x.name).replace(/[<&]/g, "")}</option>`).join("");
 }
 $("save").onclick = () => {
   const s = store.get("slots", []), name = new Date().toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) + " のループ";
-  s.unshift({ name, pat: JSON.parse(JSON.stringify(pat)) }); store.set("slots", s.slice(0, 30)); renderSlots(); toast("保存しました");
+  s.unshift({ name, pat: clone(pat) }); store.set("slots", s.slice(0, 30)); renderSlots(); toast("保存しました");
 };
 $("slots").onchange = () => {
   const i = $("slots").value; if (i === "") return;
-  const s = store.get("slots", [])[+i]; if (s) { pat = { ...blank(), ...s.pat }; paint(); toast("読み込みました"); }
+  const s = store.get("slots", [])[+i]; const p = s && normalize(clone(s.pat));
+  if (p) { pat = p; buildGrid(); paint(); toast("読み込みました"); }
   $("slots").value = "";
 };
+// 共有リンク: 2.テンポ.ハネ.楽器.キー.声.メロディ.楽器~マス.楽器~マス…
 function enc() {
-  const bits = a => a.map(x => x ? "1" : "0").join("");
-  const s = [pat.bpm, pat.swing, ...DRUMS.map(d => parseInt(bits(pat[d.k]), 2).toString(36)), parseInt(bits(pat.voice), 2).toString(36), pat.mel.map(n => n < 0 ? "-" : n).join(""), $("tone").value, $("key").value].join(".");
-  return s;
+  return ["2", pat.bpm, pat.swing, pat.tone, pat.key, pat.voice.join(""), pat.mel.map(n => n < 0 ? "-" : n).join(""), ...pat.tracks.map(t => t.inst + "~" + t.steps.join(""))].join(".");
 }
 function dec(s) {
   try {
-    const p = s.split("."); if (p.length < 10) return null;
+    const p = s.split(".");
+    if (p[0] === "2") {
+      const digits = x => (x || "").slice(0, STEPS).padEnd(STEPS, "0").split("").map(Number);
+      return normalize({ bpm: +p[1], swing: +p[2], tone: p[3], key: +p[4], voice: digits(p[5]), mel: (p[6] || "").split("").map(c => c === "-" ? -1 : +c),
+        tracks: p.slice(7).map(x => { const [inst, st] = x.split("~"); return { inst, steps: digits(st) }; }) });
+    }
+    // 1つ前の版のリンク
+    if (p.length < 10) return null;
     const unbits = v => parseInt(v, 36).toString(2).padStart(16, "0").split("").map(Number);
-    const o = blank(); o.bpm = Math.min(180, Math.max(60, +p[0])); o.swing = Math.min(60, Math.max(0, +p[1]));
-    DRUMS.forEach((d, i) => { o[d.k] = unbits(p[2 + i]); }); o.voice = unbits(p[6]);
-    o.mel = p[7].split("").slice(0, 16).map(c => c === "-" ? -1 : Math.min(5, +c));
-    if (["square", "bass", "soft"].includes(p[8])) $("tone").value = p[8];
-    if ([...$("key").options].some(x => x.value === p[9])) $("key").value = p[9];
-    return o;
+    return normalize({ bpm: +p[0], swing: +p[1], tracks: ["kick", "snare", "hat", "clap"].map((k, i) => ({ inst: k, steps: unbits(p[2 + i]) })), voice: unbits(p[6]),
+      mel: p[7].split("").map(c => c === "-" ? -1 : +c), tone: p[8], key: +p[9] });
   } catch (e) { return null; }
 }
-$("share").onclick = async () => {
-  const url = location.origin + location.pathname + "#p=" + enc();
-  try { if (navigator.share) { await navigator.share({ title: "クセループ", text: "このループ聞いて", url }); return; } } catch (e) { if (e.name === "AbortError") return; }
+async function shareOrCopy(data, url) {
+  try { if (navigator.share) { await navigator.share({ ...data, url }); return; } } catch (e) { if (e.name === "AbortError") return; }
   try { await navigator.clipboard.writeText(url); toast("リンクをコピーしました"); } catch (e) { prompt("このリンクをコピーしてね", url); }
+}
+$("share").onclick = () => shareOrCopy({ title: "クセループ", text: "このループ聞いて" }, location.origin + location.pathname + "#p=" + enc());
+function loadHash() { const m = location.hash.match(/p=([\w.\-~]+)/); if (!m) return; const o = dec(m[1]); if (o) { pat = o; buildGrid(); paint(); toast("届いたループを読み込みました。再生を押してね"); } }
+
+// ---------- export (書き出し) ----------
+function wavBlob(buf) {
+  const ch = buf.numberOfChannels, len = buf.length, sr = buf.sampleRate, bytes = 44 + len * ch * 2;
+  const v = new DataView(new ArrayBuffer(bytes)); let o = 0;
+  const str = s => { for (let i = 0; i < s.length; i++) v.setUint8(o++, s.charCodeAt(i)); };
+  str("RIFF"); v.setUint32(o, bytes - 8, true); o += 4; str("WAVEfmt "); v.setUint32(o, 16, true); o += 4; v.setUint16(o, 1, true); o += 2; v.setUint16(o, ch, true); o += 2;
+  v.setUint32(o, sr, true); o += 4; v.setUint32(o, sr * ch * 2, true); o += 4; v.setUint16(o, ch * 2, true); o += 2; v.setUint16(o, 16, true); o += 2; str("data"); v.setUint32(o, len * ch * 2, true); o += 4;
+  const data = []; for (let c = 0; c < ch; c++) data.push(buf.getChannelData(c));
+  for (let i = 0; i < len; i++) for (let c = 0; c < ch; c++) { const x = Math.max(-1, Math.min(1, data[c][i])); v.setInt16(o, x < 0 ? x * 0x8000 : x * 0x7fff, true); o += 2; }
+  return new Blob([v.buffer], { type: "audio/wav" });
+}
+let lastFile = null;
+$("export").onclick = async () => {
+  ensureAudio();
+  const btn = $("export"); btn.disabled = true; btn.textContent = "書き出し中…";
+  try {
+    const loops = +$("loops").value, sr = 44100, d = stepDur(), total = loops * STEPS * d + 1.6;
+    const off = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, Math.ceil(total * sr), sr);
+    const live = A; A = makeEnv(off);
+    try { for (let L = 0; L < loops; L++) for (let s = 0; s < STEPS; s++) scheduleStep(s, 0.05 + (L * STEPS + s) * d + swingOff(s)); }
+    finally { A = live; }
+    const rendered = await off.startRendering();
+    const now = new Date(), pad = n => String(n).padStart(2, "0");
+    const name = `kuseloop-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.wav`;
+    lastFile = new File([wavBlob(rendered)], name, { type: "audio/wav" });
+    if (navigator.canShare && navigator.canShare({ files: [lastFile] })) {
+      btn.textContent = "送る / 保存する";   // 共有画面はタップの中でしか開けないので、もう一度押してもらう
+      toast("できた。もう一度押すと共有画面が開くよ");
+      btn.disabled = false;
+      btn.onclick = async () => { try { await navigator.share({ files: [lastFile], title: "クセループ" }); } catch (e) {} resetExport(); };
+      return;
+    }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(lastFile); a.download = name; document.body.append(a); a.click(); a.remove();
+    toast("書き出しました");
+  } catch (e) { toast("書き出せませんでした"); }
+  resetExport();
 };
-function loadHash() { const m = location.hash.match(/p=([\w.\-]+)/); if (!m) return; const o = dec(m[1]); if (o) { pat = o; paint(); toast("届いたループを読み込みました。再生を押してね"); } }
+const exportHandler = $("export").onclick;
+function resetExport() { const b = $("export"); b.disabled = false; b.textContent = "書き出す"; b.onclick = exportHandler; }
 
 let toastT = null;
-function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2200); }
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2400); }
 
 // ---------- start ----------
-buildGrid(); pat.bpm ??= 92; pat.swing ??= 12;
 chop = store.get("chop", false); $("chop").setAttribute("aria-pressed", String(chop));
 $("vpitch").value = store.get("vpitch", 0);
-paint(); renderSlots(); loadHash(); drawWave();
+buildGrid(); paint(); renderSlots(); loadHash(); drawWave();
 window.addEventListener("hashchange", loadHash);
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
