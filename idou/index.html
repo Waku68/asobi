@@ -506,19 +506,24 @@ function regionBox(key) {
   if (w / h < ar) { const nw = h * ar; x0 -= (nw - w) / 2; w = nw; } else { const nh = w / ar; y0 -= (nh - h) / 2; h = nh; }
   return [x0, y0, w, h];
 }
+let zoomRAF = 0;
 function zoomTo(key) {
   st.z = key;
   document.querySelectorAll("#zooms button").forEach(b => b.setAttribute("aria-pressed", b.dataset.z === key ? "true" : "false"));
+  // 前のズームが動いていたら止める
+  if (zoomRAF) { cancelAnimationFrame(zoomRAF); zoomRAF = 0; }
   const to = regionBox(key), from = vb.slice();
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) { setVB(to); drawPins(); drawMesh(); return; }
-  const t0 = performance.now(), dur = 340;
+  // 時計は最初のフレームから数え、0〜1 に収める（rAF の時刻はクリック時刻より前になることがある）
+  let t0 = -1; const dur = 340;
   const step = now => {
-    let t = Math.min(1, (now - t0) / dur);
-    t = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-    setVB(from.map((f, k) => f + (to[k] - f) * t)); drawPins(); drawMesh();
-    if (t < 1) requestAnimationFrame(step);
+    if (t0 < 0) t0 = now;
+    const p = Math.max(0, Math.min(1, (now - t0) / dur));
+    const e = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
+    setVB(from.map((f, k) => f + (to[k] - f) * e)); drawPins(); drawMesh();
+    zoomRAF = p < 1 ? requestAnimationFrame(step) : 0;
   };
-  requestAnimationFrame(step);
+  zoomRAF = requestAnimationFrame(step);
 }
 addEventListener("resize", () => { drawPins(); drawMesh(); });
 
@@ -960,9 +965,11 @@ playBtn.addEventListener("click", () => {
   let mx = 0; for (let c = 0; c < M.NC; c++) { const v = arr[c]; if (isFinite(v) && v > mx) mx = v; }
   mx = Math.min(mx, 960);
   playBtn.setAttribute("aria-pressed", "true"); playBtn.textContent = "■";
-  const t0 = performance.now(), dur = 7000; let frame = 0;
+  // 時計は最初のフレームから数える（rAF の時刻はクリック時刻より前になることがある）
+  let t0 = -1, frame = 0; const dur = 7000;
   const step = now => {
-    const f = Math.min(1, (now - t0) / dur);
+    if (t0 < 0) t0 = now;
+    const f = Math.max(0, Math.min(1, (now - t0) / dur));
     st.reach = mx * Math.pow(f, 1.7);
     reach.value = String(Math.round(st.reach)); setReachLabel(); fieldDirty = true; drawMesh();
     if ((frame++ & 7) === 0) buildLegend();
